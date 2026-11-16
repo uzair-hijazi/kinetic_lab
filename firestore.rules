@@ -1,0 +1,240 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidSkin(skin) {
+      return skin in ['cyan', 'amber', 'emerald', 'magenta', 'prism'];
+    }
+
+    function isValidGravityMode(mode) {
+      return mode in ['EARTH', 'LOW_G', 'ZERO_G', 'INVERTED'];
+    }
+
+    function isValidPlayerProfile(data) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 40 &&
+             data.coins is int && data.coins >= 0 && data.coins <= 10000000 &&
+             data.hintsRemaining is int && data.hintsRemaining >= 0 && data.hintsRemaining <= 10000 &&
+             data.streakDays is int && data.streakDays >= 0 && data.streakDays <= 10000 &&
+             data.lastClaimEpochDay is int && data.lastClaimEpochDay >= 0 && data.lastClaimEpochDay <= 1000000 &&
+             data.selectedSkin is string && data.selectedSkin.size() <= 20 && isValidSkin(data.selectedSkin) &&
+             data.unlockedSkins is list && data.unlockedSkins.size() >= 1 && data.unlockedSkins.size() <= 10 &&
+             data.unlockedSkins[0] is string &&
+             data.totalScore is int && data.totalScore >= 0 && data.totalScore <= 100000000 &&
+             data.totalStars is int && data.totalStars >= 0 && data.totalStars <= 10000 &&
+             data.levelsCompleted is int && data.levelsCompleted >= 0 && data.levelsCompleted <= 5000 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidLevelProgress(data) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.levelNumber is int && data.levelNumber >= 1 && data.levelNumber <= 5000 &&
+             data.worldIndex is int && data.worldIndex >= 0 && data.worldIndex <= 50 &&
+             data.bestScore is int && data.bestScore >= 0 && data.bestScore <= 1000000 &&
+             data.stars is int && data.stars >= 0 && data.stars <= 3 &&
+             data.completed is bool &&
+             data.bestToolsUsed is int && data.bestToolsUsed >= 0 && data.bestToolsUsed <= 100 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidLeaderboardEntry(data) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 30 &&
+             data.avatarBadge is string && data.avatarBadge.size() >= 1 && data.avatarBadge.size() <= 30 &&
+             data.totalScore is int && data.totalScore >= 0 && data.totalScore <= 100000000 &&
+             data.totalStars is int && data.totalStars >= 0 && data.totalStars <= 10000 &&
+             data.levelsCompleted is int && data.levelsCompleted >= 0 && data.levelsCompleted <= 5000 &&
+             data.isPublic is bool &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidCustomLevel(data) {
+      return data.authorId is string && data.authorId.size() >= 1 && data.authorId.size() <= 128 &&
+             data.authorName is string && data.authorName.size() >= 1 && data.authorName.size() <= 30 &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 50 &&
+             data.description is string && data.description.size() <= 160 &&
+             data.gravityMode is string && data.gravityMode.size() <= 20 && isValidGravityMode(data.gravityMode) &&
+             data.emitter is map && data.emitter.size() >= 3 && data.emitter.size() <= 10 &&
+             data.goal is map && data.goal.size() >= 2 && data.goal.size() <= 6 &&
+             data.toolBudget is map && data.toolBudget.size() <= 10 &&
+             data.elements is list && data.elements.size() <= 40 &&
+             (data.elements.size() == 0 || data.elements[0] is map) &&
+             data.stars is list && data.stars.size() <= 3 &&
+             (data.stars.size() == 0 || data.stars[0] is map) &&
+             data.published is bool &&
+             data.verified is bool &&
+             data.playsCount is int && data.playsCount >= 0 && data.playsCount <= 10000000 &&
+             data.likesCount is int && data.likesCount >= 0 && data.likesCount <= 10000000 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    match /users/{userId} {
+      allow get: if isSignedIn() && isValidId(userId) && request.auth.uid == userId;
+      allow list: if isSignedIn() && request.auth.uid == userId;
+
+      allow create: if isSignedIn() &&
+                       isValidId(userId) &&
+                       request.auth.uid == userId &&
+                       incoming().userId == request.auth.uid &&
+                       incoming().keys().hasAll([
+                         'userId', 'displayName', 'coins', 'hintsRemaining',
+                         'streakDays', 'lastClaimEpochDay', 'selectedSkin', 'unlockedSkins',
+                         'totalScore', 'totalStars', 'levelsCompleted', 'createdAt', 'updatedAt'
+                       ]) &&
+                       incoming().keys().hasOnly([
+                         'userId', 'displayName', 'coins', 'hintsRemaining',
+                         'streakDays', 'lastClaimEpochDay', 'selectedSkin', 'unlockedSkins',
+                         'totalScore', 'totalStars', 'levelsCompleted', 'createdAt', 'updatedAt'
+                       ]) &&
+                       isValidPlayerProfile(incoming());
+
+      allow update: if isSignedIn() &&
+                       isValidId(userId) &&
+                       request.auth.uid == userId &&
+                       isValidPlayerProfile(incoming()) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly([
+                         'displayName', 'coins', 'hintsRemaining', 'streakDays',
+                         'lastClaimEpochDay', 'selectedSkin', 'unlockedSkins',
+                         'totalScore', 'totalStars', 'levelsCompleted', 'updatedAt'
+                       ]);
+
+      allow delete: if isSignedIn() && isValidId(userId) && request.auth.uid == userId;
+
+      match /level_progress/{levelId} {
+        allow get: if isSignedIn() && isValidId(levelId) && request.auth.uid == userId;
+        allow list: if isSignedIn() && request.auth.uid == userId;
+
+        allow create: if isSignedIn() &&
+                         isValidId(levelId) &&
+                         request.auth.uid == userId &&
+                         incoming().userId == request.auth.uid &&
+                         incoming().keys().hasAll([
+                           'userId', 'levelNumber', 'worldIndex', 'bestScore',
+                           'stars', 'completed', 'bestToolsUsed', 'createdAt', 'updatedAt'
+                         ]) &&
+                         incoming().keys().hasOnly([
+                           'userId', 'levelNumber', 'worldIndex', 'bestScore',
+                           'stars', 'completed', 'bestToolsUsed', 'createdAt', 'updatedAt'
+                         ]) &&
+                         isValidLevelProgress(incoming());
+
+        allow update: if isSignedIn() &&
+                         isValidId(levelId) &&
+                         request.auth.uid == userId &&
+                         isValidLevelProgress(incoming()) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         incoming().levelNumber == existing().levelNumber &&
+                         incoming().diff(existing()).affectedKeys().hasOnly([
+                           'worldIndex', 'bestScore', 'stars', 'completed', 'bestToolsUsed', 'updatedAt'
+                         ]);
+
+        allow delete: if isSignedIn() && isValidId(levelId) && request.auth.uid == userId;
+      }
+    }
+
+    match /leaderboard/{entryId} {
+      allow get: if isSignedIn() && isValidId(entryId) &&
+                    (request.auth.uid == entryId || (resource != null && resource.data.isPublic == true));
+      allow list: if isSignedIn() && resource.data.isPublic == true;
+
+      allow create: if isSignedIn() &&
+                       isValidId(entryId) &&
+                       request.auth.uid == entryId &&
+                       incoming().userId == request.auth.uid &&
+                       incoming().keys().hasAll([
+                         'userId', 'displayName', 'avatarBadge', 'totalScore',
+                         'totalStars', 'levelsCompleted', 'isPublic', 'createdAt', 'updatedAt'
+                       ]) &&
+                       incoming().keys().hasOnly([
+                         'userId', 'displayName', 'avatarBadge', 'totalScore',
+                         'totalStars', 'levelsCompleted', 'isPublic', 'createdAt', 'updatedAt'
+                       ]) &&
+                       isValidLeaderboardEntry(incoming());
+
+      allow update: if isSignedIn() &&
+                       isValidId(entryId) &&
+                       request.auth.uid == entryId &&
+                       isValidLeaderboardEntry(incoming()) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly([
+                         'displayName', 'avatarBadge', 'totalScore',
+                         'totalStars', 'levelsCompleted', 'isPublic', 'updatedAt'
+                       ]);
+
+      allow delete: if isSignedIn() && isValidId(entryId) && request.auth.uid == entryId;
+    }
+
+    match /custom_levels/{levelId} {
+      allow get: if isSignedIn() && isValidId(levelId) &&
+                    (resource == null || resource.data.authorId == request.auth.uid || resource.data.published == true);
+      allow list: if isSignedIn() &&
+                     (resource.data.authorId == request.auth.uid || resource.data.published == true);
+
+      allow create: if isSignedIn() &&
+                       isValidId(levelId) &&
+                       incoming().authorId == request.auth.uid &&
+                       incoming().playsCount == 0 &&
+                       incoming().likesCount == 0 &&
+                       incoming().keys().hasAll([
+                         'authorId', 'authorName', 'title', 'description', 'gravityMode',
+                         'emitter', 'goal', 'toolBudget', 'elements', 'stars',
+                         'published', 'verified', 'playsCount', 'likesCount', 'createdAt', 'updatedAt'
+                       ]) &&
+                       incoming().keys().hasOnly([
+                         'authorId', 'authorName', 'title', 'description', 'gravityMode',
+                         'emitter', 'goal', 'toolBudget', 'elements', 'stars',
+                         'published', 'verified', 'playsCount', 'likesCount', 'createdAt', 'updatedAt'
+                       ]) &&
+                       isValidCustomLevel(incoming());
+
+      allow update: if isSignedIn() && isValidId(levelId) && isValidCustomLevel(incoming()) &&
+                       incoming().authorId == existing().authorId &&
+                       incoming().createdAt == existing().createdAt && (
+                         (existing().authorId == request.auth.uid &&
+                          incoming().diff(existing()).affectedKeys().hasOnly([
+                            'authorName', 'title', 'description', 'gravityMode',
+                            'emitter', 'goal', 'toolBudget', 'elements', 'stars',
+                            'published', 'verified', 'updatedAt'
+                          ])) ||
+                         (existing().published == true &&
+                          incoming().diff(existing()).affectedKeys().hasOnly([
+                            'playsCount', 'likesCount', 'updatedAt'
+                          ]) &&
+                          incoming().playsCount >= existing().playsCount &&
+                          incoming().playsCount <= existing().playsCount + 1 &&
+                          incoming().likesCount >= existing().likesCount &&
+                          incoming().likesCount <= existing().likesCount + 1)
+                       );
+
+      allow delete: if isSignedIn() && isValidId(levelId) && resource.data.authorId == request.auth.uid;
+    }
+  }
+}

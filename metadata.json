@@ -1,0 +1,6 @@
+{
+  "name": "Kinetic Lab",
+  "description": "Physics-based puzzle game with hundreds of levels, in-game level editor, global leaderboards, daily rewards, offline play, and cloud save.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

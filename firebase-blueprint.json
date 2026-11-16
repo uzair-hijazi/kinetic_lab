@@ -1,0 +1,303 @@
+{
+  "entities": {
+    "PlayerProfile": {
+      "title": "PlayerProfile",
+      "description": "Cloud save profile for a Kinetic Lab player including progression totals, daily reward streak, coins, and unlocked orb skins.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated Firebase UID of the player."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Player handle displayed in profile and leaderboard."
+        },
+        "coins": {
+          "type": "integer",
+          "description": "Kinetic coins earned from levels and daily rewards."
+        },
+        "hintsRemaining": {
+          "type": "integer",
+          "description": "Available solution hint tokens."
+        },
+        "streakDays": {
+          "type": "integer",
+          "description": "Current consecutive daily reward streak."
+        },
+        "lastClaimEpochDay": {
+          "type": "integer",
+          "description": "Epoch day number when the player last claimed a daily reward."
+        },
+        "selectedSkin": {
+          "type": "string",
+          "enum": ["cyan", "amber", "emerald", "magenta", "prism"],
+          "description": "Currently active orb visual skin."
+        },
+        "unlockedSkins": {
+          "type": "array",
+          "description": "Bounded list of unlocked orb skin identifiers."
+        },
+        "totalScore": {
+          "type": "integer",
+          "description": "Cumulative best score across all completed levels."
+        },
+        "totalStars": {
+          "type": "integer",
+          "description": "Total quantum stars earned."
+        },
+        "levelsCompleted": {
+          "type": "integer",
+          "description": "Count of unique campaign levels completed."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of profile creation (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of latest cloud sync (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "displayName",
+        "coins",
+        "hintsRemaining",
+        "streakDays",
+        "lastClaimEpochDay",
+        "selectedSkin",
+        "unlockedSkins",
+        "totalScore",
+        "totalStars",
+        "levelsCompleted",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "LevelProgress": {
+      "title": "LevelProgress",
+      "description": "Per-level cloud save record for cross-device sync.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated Firebase UID of the owner."
+        },
+        "levelNumber": {
+          "type": "integer",
+          "description": "1-based campaign level number."
+        },
+        "worldIndex": {
+          "type": "integer",
+          "description": "0-based world index."
+        },
+        "bestScore": {
+          "type": "integer",
+          "description": "Highest score achieved on this level."
+        },
+        "stars": {
+          "type": "integer",
+          "description": "Best star rating achieved (0 to 3)."
+        },
+        "completed": {
+          "type": "boolean",
+          "description": "Whether the level has been solved."
+        },
+        "bestToolsUsed": {
+          "type": "integer",
+          "description": "Minimum tool count used to solve."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of first record (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of latest record update (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "levelNumber",
+        "worldIndex",
+        "bestScore",
+        "stars",
+        "completed",
+        "bestToolsUsed",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "LeaderboardEntry": {
+      "title": "LeaderboardEntry",
+      "description": "Public non-PII global leaderboard entry keyed by userId.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated Firebase UID."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Public gamer handle (no email or PII)."
+        },
+        "avatarBadge": {
+          "type": "string",
+          "description": "Badge identifier for leaderboard display."
+        },
+        "totalScore": {
+          "type": "integer",
+          "description": "Total cumulative campaign score."
+        },
+        "totalStars": {
+          "type": "integer",
+          "description": "Total stars collected."
+        },
+        "levelsCompleted": {
+          "type": "integer",
+          "description": "Number of campaign levels completed."
+        },
+        "isPublic": {
+          "type": "boolean",
+          "description": "Whether the leaderboard entry is publicly ranked."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of leaderboard registration."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of latest score submission."
+        }
+      },
+      "required": [
+        "userId",
+        "displayName",
+        "avatarBadge",
+        "totalScore",
+        "totalStars",
+        "levelsCompleted",
+        "isPublic",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "CustomLevel": {
+      "title": "CustomLevel",
+      "description": "User-authored physics puzzle level built with the in-game level editor.",
+      "type": "object",
+      "properties": {
+        "authorId": {
+          "type": "string",
+          "description": "Authenticated Firebase UID of the level creator."
+        },
+        "authorName": {
+          "type": "string",
+          "description": "Public handle of the level creator."
+        },
+        "title": {
+          "type": "string",
+          "description": "Custom level title."
+        },
+        "description": {
+          "type": "string",
+          "description": "Short puzzle description or hint."
+        },
+        "gravityMode": {
+          "type": "string",
+          "enum": ["EARTH", "LOW_G", "ZERO_G", "INVERTED"],
+          "description": "Gravity preset for the physics simulation."
+        },
+        "emitter": {
+          "type": "object",
+          "description": "Emitter position and launch vector map."
+        },
+        "goal": {
+          "type": "object",
+          "description": "Target vortex position and radius map."
+        },
+        "toolBudget": {
+          "type": "object",
+          "description": "Map of tool types to available counts."
+        },
+        "elements": {
+          "type": "array",
+          "description": "List of static obstacles, hazards, portals, and moving walls."
+        },
+        "stars": {
+          "type": "array",
+          "description": "Up to 3 collectible star coordinate maps."
+        },
+        "published": {
+          "type": "boolean",
+          "description": "Whether the level is shared with the community."
+        },
+        "verified": {
+          "type": "boolean",
+          "description": "Whether the creator play-tested and solved the level."
+        },
+        "playsCount": {
+          "type": "integer",
+          "description": "Community play counter."
+        },
+        "likesCount": {
+          "type": "integer",
+          "description": "Community like counter."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of creation."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of latest update."
+        }
+      },
+      "required": [
+        "authorId",
+        "authorName",
+        "title",
+        "description",
+        "gravityMode",
+        "emitter",
+        "goal",
+        "toolBudget",
+        "elements",
+        "stars",
+        "published",
+        "verified",
+        "playsCount",
+        "likesCount",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/PlayerProfile" },
+      "description": "Private cloud save profile owned by userId."
+    },
+    "/users/{userId}/level_progress/{levelId}": {
+      "schema": { "$ref": "#/entities/LevelProgress" },
+      "description": "Private per-level progress documents owned by userId."
+    },
+    "/leaderboard/{entryId}": {
+      "schema": { "$ref": "#/entities/LeaderboardEntry" },
+      "description": "Global leaderboard scores keyed by userId with no PII."
+    },
+    "/custom_levels/{levelId}": {
+      "schema": { "$ref": "#/entities/CustomLevel" },
+      "description": "User-created physics levels synced to cloud and optionally published."
+    }
+  }
+}

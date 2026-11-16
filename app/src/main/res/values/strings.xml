@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Kinetic Lab</string>
+    <string name="nav_campaign">Campaign</string>
+    <string name="nav_studio">Studio</string>
+    <string name="nav_ranks">Ranks</string>
+    <string name="nav_lab">Lab</string>
+    <string name="sign_in_with_google">Sign in with Google</string>
+    <string name="share_score_card">Share Score Card</string>
+</resources>
